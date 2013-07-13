@@ -9,3 +9,9 @@ This deploy script FTP's a folder using Capistrano and lftp to a remote server. 
 * **cap deploy:assets:compile** - Compile assets for deployment
 * **cap deploy:remote**         - Sync app to remote server
 * **cap deploy:remote:sync**    - Sync to remote server using lftp
+
+####Requirements
+* Capistrano (gem install capistrano)
+* latest version of Homebrew (brew update)
+* lftp (brew install lftp)
+* closure-compiler (brew install closure-compiler)
