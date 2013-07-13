@@ -1,0 +1,55 @@
+load 'config/deploy'
+
+desc "FTP Sync, Deploy, and Compile"
+namespace :deploy do
+
+  desc "Sync and compile to remote by default"
+  task :default do
+    assets.compile
+    remote.default
+  end
+
+  namespace :assets do
+
+      desc "Compile assets for production"
+      task :compile do
+          system("closure-compiler #{uncompiled_path}/* --js_output_file #{compiled_file}; true")
+      end
+
+  end
+
+  namespace :remote do
+      desc "Create temp folder for #{application}"
+      task :mount do
+          system("mkdir -p ./mnt/#{application}")
+          system("cp -R #{app_path}/ ./mnt/#{application}/")
+      end
+
+      desc "Unmount #{application} temp folder"
+      task :umount do
+          system("rm -rf ./mnt")
+      end
+
+      desc "Sync to remote server using lftp"
+      task :sync do
+          args = "set ftp:list-options -a; open sftp://#{login}:#{password}@#{url}; lcd ./mnt/#{application}; cd #{deploy_to}; mirror --reverse --delete --use-cache --verbose --allow-chown --allow-suid --no-umask --parallel=2 --exclude-glob .git"
+          system('lftp -c "' + args + '"; true')
+      end
+
+      desc "Sync app to remote server"
+      task :default do
+          self.mount
+          self.sync
+          self.umount
+      end
+  end
+
+end
+
+log_formatters = [
+  { :match => /executing/,      :color => :yellow,    :priority => 10 },
+  { :match => /Transferring/,     :color => :blue,    :priority => 10, :style => :underscore },
+  { :match => /WARNING/, :color => :magenta, :priority => 10, :style => :blink }
+]
+
+log_formatter(log_formatters)
